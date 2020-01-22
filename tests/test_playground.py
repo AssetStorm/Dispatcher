@@ -30,5 +30,5 @@ class HypothesisPlaygroundTestCase(unittest.TestCase):
             self.assertEqual("{0}*{0} is bigger than the maximum int.".format(x), str(ex))
 
 
-if __name__ == '__main__':
-    unittest.main()
+if __name__ == '__main__':  # pragma: no mutate
+    unittest.main()  # pragma: no cover
