@@ -1,0 +1,62 @@
+openapi: "3.0.0"
+info:
+  version: 1.0.0
+  title: AssetStorm-Dispatcher
+  license:
+    name: GPLv3
+servers:
+  - url: http://dispatcher.assetstorm.pinae.net
+paths:
+  /convert/markdown/{target_format}:
+    post:
+      summary: Convert markdown
+      operationId: convert_markdown
+      tags:
+        - converter
+      parameters:
+        - name: target_format
+          in: path
+          required: true
+          description: The target format for the conversion. An example would be html.
+          schema:
+            type: string
+      requestBody:
+        content:
+          text/markdown; charset=UTF-8:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: String reperesentation of the converted format
+          content:
+            text/plain:
+              schema:
+                type: string
+        default:
+          description: unexpected error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /openapi.json:
+    get:
+      summary: Return the OpenAPI v3.0 definition in JSON format.
+      operationId: openapi.json
+      tags:
+        - api
+      responses:
+        '200':
+          description: Returns the OpenAPI definition as JSON.
+          content:
+            application/json:
+              schema:
+                type: string
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      required:
+        - Error
+      properties:
+        Error:
+          type: string

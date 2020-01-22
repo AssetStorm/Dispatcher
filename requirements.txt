@@ -1,1 +1,6 @@
 hypothesis
+flask
+requests
+pyaml
+pytest
+coverage
