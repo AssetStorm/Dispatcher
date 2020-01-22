@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import Flask, request, Response
 from typing import Union
+import requests
 import json
 import yaml
 import os
@@ -28,6 +29,23 @@ def build_text_response(content: str, status: int = 200, mime_type: str = 'text/
 @app.route("/convert/markdown/<string:target_format>", methods=['POST'])
 def convert(target_format: str) -> Response:
     md_str = request.get_data(as_text=True)
+    md_converter_response = requests.post(
+        os.getenv("MARKDOWN2ASSETSTORM_URL", "https://markdown2assetstorm.assetstorm.pinae.net") + "/",
+        data=md_str)
+    as_tree = md_converter_response.json()
+    if md_converter_response.status_code != 200 or 'type' not in as_tree:
+        if 'Error' in as_tree:
+            return build_json_response(as_tree, status=400)
+        return build_json_response({"Error": "An error occured while converting the markdown document."}, status=400)
+    # query AssetStorm for an article with this xp_id
+    # found:
+    #   load the article, and search for images and other blobs like video; compare the hashes
+    #     for all identical hashes insert the existing asset id
+    #   insert the id of the article in the tree
+    # for all unidentified blobs in the new tree load them to the blob storage and insert urls and hashes
+    # save the article in AssetStorm
+    # reload the saved article from AssetStorm
+    # send the loaded article to the templater and return the result
     return build_text_response("<div>foo</div>", mime_type='text/html')
 
 
