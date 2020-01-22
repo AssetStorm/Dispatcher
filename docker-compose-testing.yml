@@ -1,0 +1,46 @@
+version: "3.7"
+services:
+  postgres:
+    image: postgres
+    environment:
+      LC_ALL: C.UTF-8
+      POSTGRES_USER: assetstorm
+      POSTGRES_PASSWORD: cttest
+      POSTGRES_DB: assetstorm 
+
+  assetstorm:
+    image: assetstorm/Assetstorm:latest
+    depends_on: 
+        - postgres
+    environment:
+      SERVER_NAME: assetstorm
+      LC_ALL: C.UTF-8
+      AS_POSTGRES_USER: assetstorm
+      AS_POSTGRES_PASSWORD: test
+      AS_POSTGRES_DB: assetstorm
+      AS_POSTGRES_HOST: postgres
+      AS_DEBUG: 'True'
+  dispatcher:
+    build: ./dispatcher
+    environment:
+      - MARKDOWN2ASSETSTORM_URL=markdown-converter
+      - SERVER_NAME=dispatcher
+
+  s3:
+    image: minio/minio
+
+  templater:
+    image: assetstorm/AssetStorm2Template:latest
+  
+  markdown-converter:
+    image: assetstorm/Markdown2AssetStorm:latest
+  
+  nginx:
+    restart: always
+    build: ./nginx/
+    ports: 
+      - "88:80"
+    depends_on:
+      - assetstorm
+    environment:
+      - PYTHON_HOST=assetstorm
