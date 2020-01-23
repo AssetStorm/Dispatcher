@@ -26,3 +26,9 @@ convenience the repo contains a start script:
 ```shell script
 ./launch_containers_production.sh
 ``` 
+
+The container can be configured with the following environment
+variables:
+ - `ASSETSTORM_URL` - default: `http://127.0.0.1:8081`
+ - `MARKDOWN2ASSETSTORM_URL` - default: `http://127.0.0.1:8082`
+ - `ASSETSTORM2TEMPLATE_URL` - default: `http://127.0.0.1:8083`
