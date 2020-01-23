@@ -12,6 +12,7 @@ class TestConvertMarkdown(unittest.TestCase):
         with app.test_client() as test_client:
             response = test_client.post('/convert/markdown/proof_html')
             self.assertEqual(200, response.status_code)
+            self.assertEqual("<div>foo</div>", str(response.data, encoding='utf-8'))
 
 
 class TestDeliverOpenApiDefinition(unittest.TestCase):
