@@ -14,7 +14,7 @@ docker-compose -f docker-compose_development.yml pull
 docker-compose -f docker-compose_development.yml up
 ``` 
 
-After the contains are running start the tests with:
+After the containers are running start the tests from `src/` with:
 ```shell script
 python -m pytest
 ```
