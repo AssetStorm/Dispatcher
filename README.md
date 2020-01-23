@@ -10,6 +10,7 @@ of contains but not the Dispatcher itself.
 
 Start the auxiliary containers for the development setup with:
 ```shell script
+docker-compose -f docker-compose_development.yml pull
 docker-compose -f docker-compose_development.yml up
 ``` 
 
