@@ -9,6 +9,6 @@ COPY requirements.txt ./
 RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
-EXPOSE 8084
+EXPOSE 8080
 
-CMD bash -c "gunicorn --workers=3 dispatcher.py:app -b 0.0.0.0:8084"
+CMD bash -c "export PYTHONPATH=$PYTHONPATH:/usr/local/lib/python3.8/site-packages && gunicorn --workers=3 dispatcher:app -b 0.0.0.0:8080"
