@@ -40,5 +40,25 @@ class TestDeliverOpenApiDefinition(unittest.TestCase):
             self.assertEqual({'url': 'https://test.org/foo/bar/baz'}, api_def['servers'][0])
 
 
+class TestLive(unittest.TestCase):
+    def setUp(self) -> None:
+        app.testing = True
+        self.env = EnvironmentVarGuard()
+
+    def test_standard_live(self):
+        with app.test_client() as test_client:
+            response = test_client.get('/live')
+            self.assertEqual(200, response.status_code)
+
+    def test_converter_unreachable(self):
+        self.env.set('MARKDOWN2ASSETSTORM_URL', 'https://wrong.url/not/existing')
+        with self.env:
+            with app.test_client() as test_client:
+                response = test_client.get('/live')
+                self.assertEqual(400, response.status_code)
+                self.assertEqual({'Error': 'The url https://wrong.url/not/existing/live is unreachable.'},
+                                 response.get_json())
+
+
 if __name__ == '__main__':  # pragma: no mutate
     unittest.main()  # pragma: no cover

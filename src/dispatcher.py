@@ -30,7 +30,7 @@ def build_text_response(content: str, status: int = 200, mime_type: str = 'text/
 def convert(target_format: str) -> Response:
     md_str = request.get_data(as_text=True)
     md_converter_response = requests.post(
-        os.getenv("MARKDOWN2ASSETSTORM_URL", "https://markdown2assetstorm.assetstorm.pinae.net") + "/",
+        os.getenv("MARKDOWN2ASSETSTORM_URL", "http://127.0.0.1:8082") + "/",
         data=md_str)
     as_tree = md_converter_response.json()
     if md_converter_response.status_code != 200 or 'type' not in as_tree:
@@ -57,6 +57,19 @@ def open_api_definition() -> Response:
     if os.getenv("SERVER_NAME") is not None:
         api_definition["servers"][0]['url'] = os.getenv("SERVER_NAME")
     return build_json_response(api_definition)
+
+
+@app.route("/live", methods=['GET'])
+def live():
+    try:
+        converter_response = requests.get(
+            os.getenv("MARKDOWN2ASSETSTORM_URL", "http://127.0.0.1:8082") + "/live")
+    except requests.ConnectionError:
+        return build_json_response({"Error": "The url {} is unreachable.".format(
+            os.getenv("MARKDOWN2ASSETSTORM_URL", "http://127.0.0.1:8082") + "/live")}, status=400)
+    if converter_response.status_code != 200:
+        return build_json_response(converter_response.json(), status=400)
+    return build_text_response("", status=200)
 
 
 if __name__ == "__main__":  # pragma: no mutate
