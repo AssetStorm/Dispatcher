@@ -1,0 +1,84 @@
+version: "3.7"
+services:
+  assetstorm-postgres:
+    image: postgres:alpine
+    restart: unless-stopped
+    environment:
+      LC_ALL: C.UTF-8
+      POSTGRES_USER: assetstorm
+      POSTGRES_PASSWORD: test
+      POSTGRES_DB: assetstorm
+
+  assetstorm:
+    image: assetstorm/Assetstorm:latest
+    restart: unless-stopped
+    depends_on: 
+        - assetstorm-postgres
+    environment:
+      SERVER_NAME: assetstorm
+      LC_ALL: C.UTF-8
+      AS_POSTGRES_USER: assetstorm
+      AS_POSTGRES_PASSWORD: test
+      AS_POSTGRES_DB: assetstorm
+      AS_POSTGRES_HOST: postgres
+      AS_DEBUG: 'True'
+
+  assetstorm-nginx:
+    restart: unless-stopped
+    image: assetstorm/nginx-python:latest
+    ports:
+      - "89:80"
+    depends_on:
+      - assetstorm
+    environment:
+      - PYTHON_HOST=assetstorm
+
+  s3:
+    image: minio/minio
+
+  markdown2assetstorm:
+    image: assetstorm/markdown2assetstorm:latest
+
+  markdown2assetstorm-nginx:
+    restart: unless-stopped
+    image: assetstorm/nginx-python:latest
+    ports:
+      - "8082:80"
+    depends_on:
+      - markdown2assetstorm
+    environment:
+      PYTHON_HOST: "markdown2assetstorm"
+
+  assetstorm2template:
+    image: assetstorm/assetstorm2template:latest
+    depends_on:
+      - assetstorm
+    environment:
+      ASSETSTORM_URL: "assetstorm-nginx"
+
+  assetstorm2template-nginx:
+    restart: unless-stopped
+    image: assetstorm/nginx-python:latest
+    ports:
+      - "8083:80"
+    depends_on:
+      - assetstorm2template
+    environment:
+      PYTHON_HOST: "markdown2assetstorm"
+
+  dispatcher:
+    build: ./dispatcher
+    restart: unless-stopped
+    environment:
+      MARKDOWN2ASSETSTORM_URL: markdown-converter
+      SERVER_NAME: dispatcher
+
+  dispatcher-nginx:
+    restart: unless-stopped
+    image: assetstorm/nginx-python:latest
+    ports:
+      - "8084:80"
+    depends_on:
+      - dispatcher
+    environment:
+      PYTHON_HOST: "dispatcher"
