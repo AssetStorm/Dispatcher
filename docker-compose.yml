@@ -5,29 +5,29 @@ services:
     restart: unless-stopped
     environment:
       LC_ALL: C.UTF-8
-      POSTGRES_USER: assetstorm
-      POSTGRES_PASSWORD: test
-      POSTGRES_DB: assetstorm
+      POSTGRES_USER: "assetstorm"
+      POSTGRES_PASSWORD: "test"
+      POSTGRES_DB: "assetstorm"
 
   assetstorm:
-    image: assetstorm/Assetstorm:latest
+    image: assetstorm/assetstorm:latest
     restart: unless-stopped
     depends_on: 
         - assetstorm-postgres
     environment:
-      SERVER_NAME: assetstorm
-      LC_ALL: C.UTF-8
-      AS_POSTGRES_USER: assetstorm
-      AS_POSTGRES_PASSWORD: test
-      AS_POSTGRES_DB: assetstorm
-      AS_POSTGRES_HOST: postgres
-      AS_DEBUG: 'True'
+      SERVER_NAME: "assetstorm"
+      LC_ALL: "C.UTF-8"
+      AS_POSTGRES_USER: "assetstorm"
+      AS_POSTGRES_PASSWORD: "test"
+      AS_POSTGRES_DB: "assetstorm"
+      AS_POSTGRES_HOST: "assetstorm-postgres"
+      AS_DEBUG: "True"
 
   assetstorm-nginx:
     restart: unless-stopped
     image: assetstorm/nginx-python:latest
     ports:
-      - "89:80"
+      - "8081:80"
     depends_on:
       - assetstorm
     environment:
@@ -70,8 +70,8 @@ services:
     build: ./dispatcher
     restart: unless-stopped
     environment:
-      MARKDOWN2ASSETSTORM_URL: markdown-converter
-      SERVER_NAME: dispatcher
+      MARKDOWN2ASSETSTORM_URL: "markdown2assetstorm-nginx"
+      SERVER_NAME: "dispatcher"
 
   dispatcher-nginx:
     restart: unless-stopped

@@ -10,7 +10,7 @@ services:
       POSTGRES_DB: "assetstorm"
 
   assetstorm:
-    image: assetstorm/Assetstorm:latest
+    image: assetstorm/assetstorm:latest
     depends_on: 
         - assetstorm-postgres
     environment:
@@ -19,7 +19,7 @@ services:
       AS_POSTGRES_USER: "assetstorm"
       AS_POSTGRES_PASSWORD: "test"
       AS_POSTGRES_DB: "assetstorm"
-      AS_POSTGRES_HOST: "postgres"
+      AS_POSTGRES_HOST: "assetstorm-postgres"
       AS_DEBUG: "True"
 
   assetstorm-nginx:
@@ -63,4 +63,4 @@ services:
     depends_on:
       - assetstorm2template
     environment:
-      PYTHON_HOST: "markdown2assetstorm"
+      PYTHON_HOST: "assetstorm2template"

@@ -1,5 +1,6 @@
 FROM python:3.8-alpine
 ENV PYTHONUNBUFFERED 1
+RUN apk update && apk add bash py-gunicorn
 RUN pip install --no-cache-dir --upgrade pip wheel
 RUN mkdir /code
 WORKDIR /code
