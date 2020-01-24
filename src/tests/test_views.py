@@ -1,12 +1,46 @@
 # -*- coding: utf-8 -*-
 from dispatcher import app
-from test.support import EnvironmentVarGuard
+from flask import Response
+#from test.support import EnvironmentVarGuard
 import unittest
+import io
 
 
 class TestConvertMarkdown(unittest.TestCase):
     def setUp(self) -> None:
         app.testing = True
+
+    def request_with_error(self, data: dict) -> Response:
+        with app.test_client() as test_client:
+            response = test_client.post('/convert/markdown/proof_html',
+                                        data=data,
+                                        content_type="multipart/form-data")
+        self.assertEqual(400, response.status_code)
+        self.assertEqual("application/json", response.mimetype)
+        return response
+
+    def test_uplaod_no_text(self):
+        data = {'image.jpg': (io.BytesIO(b"123"), "image.jpg")}
+        response = self.request_with_error(data)
+        self.assertEqual({"Error": "There was no .md or .txt file in the upload."},
+                         response.get_json())
+
+    def test_upload_no_unicode(self):
+        data = {'no_unicode.md': (io.BytesIO(b"abc\xc3\x00123"), "no_unicode.md")}
+        response = self.request_with_error(data)
+        self.assertEqual({"Error": "The uploaded markdown was not encoded as UTF-8."},
+                         response.get_json())
+
+    def test_upload_single_file(self):
+        data = {
+            'article.md': (io.BytesIO("# Markdown\n\nWith text.".encode('utf-8')), "article.md"),
+            'image.jpg': (io.BytesIO(b"123"), "image.jpg")
+        }
+        with app.test_client() as test_client:
+            response = test_client.post('/convert/markdown/proof_html',
+                                        data=data,
+                                        content_type="multipart/form-data")
+            self.assertEqual("# Markdown\n\nWith text.", str(response.data, encoding='utf-8'))
 
     def test_convert_no_content(self):
         with app.test_client() as test_client:

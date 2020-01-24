@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from flask import Flask, request, Response
 from response_helpers import build_text_response, build_json_response
+from hash_helpers import hash_file
 from settings import Settings
 import requests
 import yaml
@@ -11,7 +12,32 @@ app = Flask(__name__)
 
 @app.route("/convert/markdown/<string:target_format>", methods=['POST'])
 def convert(target_format: str) -> Response:
-    md_str = request.get_data(as_text=True)
+    article_filename = None
+    for filename in request.files:
+        if filename.endswith('.md'):
+            article_filename = filename
+            break
+    for filename in request.files:
+        if filename.endswith('.txt'):
+            article_filename = filename
+            break
+    if article_filename is None:
+        return build_json_response(
+            app, {"Error": "There was no .md or .txt file in the upload."},
+            status=400)
+    binary_files = []
+    for filename in request.files:
+        if filename != article_filename:
+            binary_files.append({
+                "filename": filename,
+                "hash": hash_file(request.files[filename])
+            })
+    try:
+        md_str = str(request.files[article_filename].read(), encoding='utf-8')
+    except UnicodeDecodeError:
+        return build_json_response(
+            app, {"Error": "The uploaded markdown was not encoded as UTF-8."},
+            status=400)
     md_converter_response = requests.post(
         Settings().md_conv_url + "/",
         data=md_str)
