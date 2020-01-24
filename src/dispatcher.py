@@ -21,6 +21,35 @@ def convert(target_format: str) -> Response:
         return build_json_response(
             app, {"Error": "An error occurred while converting the markdown document."},
             status=400)
+    if len(as_tree['conversion_container']['blocks']) < 1:
+        return build_json_response(
+            app, {"Error": "The document was empty."},
+            status=400)
+    if len(as_tree['conversion_container']['blocks']) > 1:
+        return build_json_response(
+            app, {"Error": "The document must contain exactly one article. Did you forget the header?"},
+            status=400)
+    article = as_tree['conversion_container']['blocks'][0]
+    if 'type' not in article:
+        return build_json_response(
+            app, {"Error": "The document did not define an article type. Please add a \"type\" key."},
+            status=400)
+    if 'x_id' not in article:
+        return build_json_response(
+            app, {"Error": "The document did not reference an x_id. Please add a \"x_id\" key."},
+            status=400)
+    article_list_response = requests.get(
+        Settings().as_url + "/get_types_for_parent?parent_type_name=article")
+    if md_converter_response.status_code != 200:
+        return build_json_response(
+            app, {"Error": "Unable to load list of article types."},
+            status=400)
+    article_type_list = article_list_response.json()
+    if article['type'] not in article_type_list:
+        return build_json_response(
+            app, {"Error": "Unknown article type: {}. Valid types are: {}".format(
+                article['type'], str(article_type_list))},
+            status=400)
     # query AssetStorm for an article with this xp_id
     # found:
     #   load the article, and search for images and other blobs like video; compare the hashes
