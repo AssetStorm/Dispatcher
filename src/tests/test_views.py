@@ -8,10 +8,29 @@ class TestConvertMarkdown(unittest.TestCase):
     def setUp(self) -> None:
         app.testing = True
 
-    def test_convert_no_images(self):
+    def test_convert_no_content(self):
         with app.test_client() as test_client:
             response = test_client.post('/convert/markdown/proof_html')
-            self.assertEqual(200, response.status_code)
+            self.assertEqual(400, response.status_code)
+            self.assertEqual("application/json", response.mimetype)
+            self.assertEqual({"Error": "An error occurred while converting the markdown document."},
+                             response.get_json())
+
+    def test_convert(self):
+        with app.test_client() as test_client:
+            response = test_client.post(
+                '/convert/markdown/proof_html', data="<!---\n" +
+                "type: article-standard\n" +
+                "x_id: \"\"\n" +
+                "title: MD_BLOCK\n-->\n# Titel\n\n<!---\n" +
+                "subtitle: MD_BLOCK\n-->\n## Untertitel\n\n<!---\n" +
+                "teaser: MD_BLOCK\n-->\n**Vorlauftext**\n\n<!---\n" +
+                "author: MD_BLOCK\n-->\nPina Merkert\n\n<!---\n" +
+                "content: MD_BLOCK\n-->\n" +
+                "Text des Artikels.\n\n" +
+                "Mehrere Absätze\n\n" +
+                "<!--- -->")
+            #self.assertEqual(200, response.status_code)
             self.assertEqual("<div>foo</div>", str(response.data, encoding='utf-8'))
 
 
