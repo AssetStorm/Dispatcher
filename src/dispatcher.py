@@ -2,6 +2,7 @@
 from flask import Flask, request, Response
 from response_helpers import build_text_response, build_json_response
 from hash_helpers import hash_file
+from assetstorm_helpers import strip_formatting
 from settings import Settings
 import requests
 import yaml
@@ -92,6 +93,17 @@ def convert(target_format: str) -> Response:
         json={"x_id": article['x_id']},
         headers={'Content-Type': 'application/json'})
     found_assets = article_query_response.json()['assets']
+    schema_response = requests.get(
+        Settings().as_url + "/get_schema?type_name=" + article['type'])
+    if schema_response.status_code != 200:
+        return build_json_response(
+            app, {"Error": "Unable to load the schema of this article type." +
+                           " This was the error:" + schema_response.json()['Error']},
+            status=400)
+    article_schema = schema_response.json()
+    for key in article_schema.keys():
+        if article_schema[key] == 1:
+            article[key] = strip_formatting(article[key])
     if len(found_assets) >= 1:
         # found:
         #   load the article, and search for images and other blobs like video; compare the hashes
@@ -118,7 +130,7 @@ def convert(target_format: str) -> Response:
     templater_response = requests.post(
         Settings().templater_url + "/",
         json={
-            "assetstorm_url": Settings().as_url,
+            "assetstorm_url": Settings().intern_as_url,
             "template_type": target_format,
             "tree": article
         }, headers={'Content-Type': 'application/json'})
