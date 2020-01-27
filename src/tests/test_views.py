@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 from dispatcher import app
 from flask import Response
-#from test.support import EnvironmentVarGuard
+from test.support import EnvironmentVarGuard
 import unittest
 import io
 
@@ -31,41 +31,61 @@ class TestConvertMarkdown(unittest.TestCase):
         self.assertEqual({"Error": "The uploaded markdown was not encoded as UTF-8."},
                          response.get_json())
 
-    def test_upload_single_file(self):
+    def test_upload_empty_document(self):
+        data = {'article.md': (io.BytesIO("".encode('utf-8')), "article.md")}
+        response = self.request_with_error(data)
+        self.assertEqual({"Error": "The document was empty."},
+                         response.get_json())
+
+    def test_upload_file_without_header(self):
         data = {
             'article.md': (io.BytesIO("# Markdown\n\nWith text.".encode('utf-8')), "article.md"),
             'image.jpg': (io.BytesIO(b"123"), "image.jpg")
         }
+        response = self.request_with_error(data)
+        self.assertEqual({"Error": "The document must contain exactly one article. Did you forget the header?"},
+                         response.get_json())
+
+    def test_upload_typeless_header(self):
+        article_markdown = "<!---\n"
+        article_markdown += "foo: bar\n"
+        article_markdown += "-->"
+        data = {'article.md': (io.BytesIO(article_markdown.encode('utf-8')), "article.md")}
+        response = self.request_with_error(data)
+        self.assertEqual({"Error": "The document did not define an article type. Please add a \"type\" key."},
+                         response.get_json())
+
+    def test_upload_missing_x_id(self):
+        article_markdown = "<!---\n"
+        article_markdown += "type: article-standard\n"
+        article_markdown += "title: MD_BLOCK\n-->\n# Titel\n\n<!---\n"
+        article_markdown += "subtitle: MD_BLOCK\n-->\n## Untertitel\n\n<!---\n"
+        article_markdown += "teaser: MD_BLOCK\n-->\n**Vorlauftext**\n\n<!---\n"
+        article_markdown += "author: MD_BLOCK\n-->\nPina Merkert\n\n<!---\n"
+        article_markdown += "content: MD_BLOCK\n-->\n"
+        article_markdown += "Text des Artikels.\n\nMehrere Absätze\n\n<!--- -->"
+        data = {'article.md': (io.BytesIO(article_markdown.encode('utf-8')), "article.md")}
+        response = self.request_with_error(data)
+        self.assertEqual({"Error": "The document did not reference an x_id. Please add a \"x_id\" key."},
+                         response.get_json())
+
+    def test_convert(self):
+        article_markdown = "<!---\n"
+        article_markdown += "type: article-standard\n"
+        article_markdown += "x_id: 1234567890123456789\n"
+        article_markdown += "title: MD_BLOCK\n-->\n# Titel\n\n<!---\n"
+        article_markdown += "subtitle: MD_BLOCK\n-->\n## Untertitel\n\n<!---\n"
+        article_markdown += "teaser: MD_BLOCK\n-->\n**Vorlauftext**\n\n<!---\n"
+        article_markdown += "author: MD_BLOCK\n-->\nPina Merkert\n\n<!---\n"
+        article_markdown += "content: MD_BLOCK\n-->\n"
+        article_markdown += "Text des Artikels.\n\nMehrere Absätze\n\n<!--- -->"
+        data = {'article.md': (io.BytesIO(article_markdown.encode('utf-8')), "article.md")}
         with app.test_client() as test_client:
             response = test_client.post('/convert/markdown/proof_html',
                                         data=data,
                                         content_type="multipart/form-data")
-            self.assertEqual("# Markdown\n\nWith text.", str(response.data, encoding='utf-8'))
-
-    def test_convert_no_content(self):
-        with app.test_client() as test_client:
-            response = test_client.post('/convert/markdown/proof_html')
-            self.assertEqual(400, response.status_code)
-            self.assertEqual("application/json", response.mimetype)
-            self.assertEqual({"Error": "An error occurred while converting the markdown document."},
-                             response.get_json())
-
-    def test_convert(self):
-        with app.test_client() as test_client:
-            response = test_client.post(
-                '/convert/markdown/proof_html', data="<!---\n" +
-                "type: article-standard\n" +
-                "x_id: \"\"\n" +
-                "title: MD_BLOCK\n-->\n# Titel\n\n<!---\n" +
-                "subtitle: MD_BLOCK\n-->\n## Untertitel\n\n<!---\n" +
-                "teaser: MD_BLOCK\n-->\n**Vorlauftext**\n\n<!---\n" +
-                "author: MD_BLOCK\n-->\nPina Merkert\n\n<!---\n" +
-                "content: MD_BLOCK\n-->\n" +
-                "Text des Artikels.\n\n" +
-                "Mehrere Absätze\n\n" +
-                "<!--- -->")
             #self.assertEqual(200, response.status_code)
-            self.assertEqual("<div>foo</div>", str(response.data, encoding='utf-8'))
+            self.assertEqual("# Markdown\n\nWith text.", str(response.data, encoding='utf-8'))
 
 
 class TestDeliverOpenApiDefinition(unittest.TestCase):
