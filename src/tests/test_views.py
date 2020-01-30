@@ -68,7 +68,6 @@ class TestConvertMarkdown(unittest.TestCase):
             "author": MdBlock("Pina Merkert"),
             "content": MdBlock("Text des Artikels.\n\nMehrere Absätze")
         })
-        print(article_markdown)
         data = {'article.md': (io.BytesIO(article_markdown.encode('utf-8')), "article.md")}
         response = self.request_with_error(data)
         self.assertEqual({"Error": "The document did not reference an x_id. Please add a \"x_id\" key."},

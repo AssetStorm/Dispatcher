@@ -9,7 +9,7 @@ class MdBlock(yaml.YAMLObject):
         self.markdown = markdown
 
     def __str__(self) -> str:
-        return "MD_BLOCK\n-->\n\n" + self.markdown + "\n\n<!---\n"
+        return "MD_BLOCK\n-->\n\n" + self.markdown + "\n\n<!--- "
 
     def __repr__(self) -> str:
         return str(self)
@@ -23,7 +23,14 @@ yaml.add_representer(MdBlock, str_representer, yaml.Dumper)
 
 
 def magic_yaml_block(data: dict) -> str:
-    return "<!---\n" + yaml.dump(data) + "-->\n\n"
+    md = "<!---"
+    for key in data:
+        if type(data[key]) in [int, float, str]:
+            md += "\n" + str(key) + ": " + data[key]
+        else:
+            md += "\n" + str(key) + ": " + str(data[key])
+    md += "-->\n\n"
+    return md
 
 
 if __name__ == "__main__":
