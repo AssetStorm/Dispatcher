@@ -2,6 +2,7 @@
 from dispatcher import app
 from flask import Response
 from test.support import EnvironmentVarGuard
+from markup_helpers import MdBlock, magic_yaml_block
 import unittest
 import io
 
@@ -56,17 +57,18 @@ class TestConvertMarkdown(unittest.TestCase):
                          response.get_json())
 
     def test_upload_missing_x_id(self):
-        article_markdown = "<!---\n"
-        article_markdown += "type: article-standard\n"
-        article_markdown += "catchphrase: Testartikel\n"
-        article_markdown += "column: Wissen\n"
-        article_markdown += "working_title: Standard-Testartikel\n"
-        article_markdown += "title: MD_BLOCK\n-->\n# Titel\n\n<!---\n"
-        article_markdown += "subtitle: MD_BLOCK\n-->\n## Untertitel\n\n<!---\n"
-        article_markdown += "teaser: MD_BLOCK\n-->\n**Vorlauftext**\n\n<!---\n"
-        article_markdown += "author: MD_BLOCK\n-->\nPina Merkert\n\n<!---\n"
-        article_markdown += "content: MD_BLOCK\n-->\n"
-        article_markdown += "Text des Artikels.\n\nMehrere Absätze\n\n<!--- -->"
+        article_markdown = magic_yaml_block({
+            "type": "article-standard",
+            "catchphrase": "Testartikel",
+            "column": "Wissen",
+            "working_title": "Standard-Testartikel",
+            "title": MdBlock("# Titel"),
+            "subtitle": MdBlock("## Untertitel"),
+            "teaser": MdBlock("**Vorlauftext**"),
+            "author": MdBlock("Pina Merkert"),
+            "content": MdBlock("Text des Artikels.\n\nMehrere Absätze")
+        })
+        print(article_markdown)
         data = {'article.md': (io.BytesIO(article_markdown.encode('utf-8')), "article.md")}
         response = self.request_with_error(data)
         self.assertEqual({"Error": "The document did not reference an x_id. Please add a \"x_id\" key."},
