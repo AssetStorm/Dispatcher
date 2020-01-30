@@ -74,18 +74,18 @@ class TestConvertMarkdown(unittest.TestCase):
                          response.get_json())
 
     def test_convert(self):
-        article_markdown = "<!---\n"
-        article_markdown += "type: article-standard\n"
-        article_markdown += "x_id: 1234567890123456789\n"
-        article_markdown += "catchphrase: Testartikel\n"
-        article_markdown += "column: Wissen\n"
-        article_markdown += "working_title: Standard-Testartikel\n"
-        article_markdown += "title: MD_BLOCK\n-->\n# Titel\n\n<!---\n"
-        article_markdown += "subtitle: MD_BLOCK\n-->\n## Untertitel\n\n<!---\n"
-        article_markdown += "teaser: MD_BLOCK\n-->\n**Vorlauftext**\n\n<!---\n"
-        article_markdown += "author: MD_BLOCK\n-->\nPina Merkert\n\n<!---\n"
-        article_markdown += "content: MD_BLOCK\n-->\n"
-        article_markdown += "Text des Artikels.\n\nMehrere Absätze\n\n<!--- -->"
+        article_markdown = magic_yaml_block({
+            "type": "article-standard",
+            "x_id": "1234567890123456789",
+            "catchphrase": "Testartikel",
+            "column": "Wissen",
+            "working_title": "Standard-Testartikel",
+            "title": MdBlock("# Titel"),
+            "subtitle": MdBlock("## Untertitel"),
+            "teaser": MdBlock("**Vorlauftext**"),
+            "author": MdBlock("Pina Merkert"),
+            "content": MdBlock("Text des Artikels.\n\nMehrere Absätze")
+        })
         data = {'article.md': (io.BytesIO(article_markdown.encode('utf-8')), "article.md")}
         with app.test_client() as test_client:
             response = test_client.post('/convert/markdown/proof_html',
