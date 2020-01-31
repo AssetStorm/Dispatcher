@@ -91,8 +91,18 @@ class TestConvertMarkdown(unittest.TestCase):
             response = test_client.post('/convert/markdown/proof_html',
                                         data=data,
                                         content_type="multipart/form-data")
-            #self.assertEqual(200, response.status_code)
-            self.assertEqual("# Markdown\n\nWith text.", str(response.data, encoding='utf-8'))
+            self.assertEqual(200, response.status_code)
+            self.assertEqual(
+                "<article-standard>" +
+                "<x_id>1234567890123456789</x_id>" +
+                "<catchphrase>Testartikel</catchphrase>" +
+                "<magazine-column>Wissen</magazine-column>" +
+                "<h1>Titel</h1>" +
+                "<h2 class=\"subtitle\">Untertitel</h2>" +
+                "<teaser>Vorlauftext</teaser>" +
+                "<author>Von Pina Merkert</author>" +
+                "<p>Text des Artikels.</p><p>Mehrere Abs�tze</p>" +
+                "</article-standard>", str(response.data, encoding='utf-8'))
 
 
 class TestDeliverOpenApiDefinition(unittest.TestCase):
