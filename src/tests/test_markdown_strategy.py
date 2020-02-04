@@ -23,12 +23,12 @@ mds_spans = {
 markdown_spans = lists(one_of(*tuple([mds_spans[key] for key in mds_spans.keys()])), min_size=1
                        ).map(lambda x: " ".join(x))
 mds_blocks = {
-    "h1": from_regex(r"^#[ \t]" + word_regex + subsequent_word_regex + r"$", fullmatch=True),
-    "h2": from_regex(r"^##[ \t]" + word_regex + subsequent_word_regex + r"$", fullmatch=True),
-    "h3": from_regex(r"^###[ \t]" + word_regex + subsequent_word_regex + r"$", fullmatch=True),
-    "h4": from_regex(r"^####[ \t]" + word_regex + subsequent_word_regex + r"$", fullmatch=True),
-    "h5": from_regex(r"^#####[ \t]" + word_regex + subsequent_word_regex + r"$", fullmatch=True),
-    "h6": from_regex(r"^######[ \t]" + word_regex + subsequent_word_regex + r"$", fullmatch=True),
+    "h1": from_regex(r"^# " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
+    "h2": from_regex(r"^## " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
+    "h3": from_regex(r"^### " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
+    "h4": from_regex(r"^#### " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
+    "h5": from_regex(r"^##### " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
+    "h6": from_regex(r"^###### " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
     "ol": markdown_spans.map(lambda x: "1. " + x),
     "ul": markdown_spans.map(lambda x: "* " + x),
     "pre": from_regex(r"^```[ \t]*(\w+)?[ \t]*\n" +
