@@ -41,7 +41,8 @@ def convert(target_format: str) -> Response:
             status=400)
     md_converter_response = requests.post(
         Settings().md_conv_url + "/",
-        data=md_str)
+        data=md_str.encode('utf-8'))
+    md_converter_response.encoding = 'utf-8'
     try:
         as_tree = md_converter_response.json()
     except json.JSONDecodeError as e:
