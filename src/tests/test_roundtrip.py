@@ -8,9 +8,7 @@ import io
 
 
 class RoundTripTestCase(unittest.TestCase):
-    @settings(deadline=timedelta(milliseconds=500))
-    @given(markdown_text)
-    def test_md_as_md_round_trip(self, md_text):
+    def md_as_md_article_round_trip(self, md_text):
         article_markdown = "<!---\ntype: article-standard\n" + \
                            "x_id: 1234567890123456789\n" + \
                            "catchphrase: Testartikel\n" + \
@@ -26,8 +24,18 @@ class RoundTripTestCase(unittest.TestCase):
             response = test_client.post('/convert/markdown/markdown',
                                         data=data,
                                         content_type="multipart/form-data")
+            if response.status_code != 200:
+                print(response.data)
             self.assertEqual(200, response.status_code)
             self.assertEqual(article_markdown, str(response.data, encoding='utf-8'))
+
+    @settings(deadline=timedelta(milliseconds=500))
+    @given(markdown_text)
+    def test_md_as_md_round_trip(self, md_text):
+        self.md_as_md_article_round_trip(md_text)
+
+    def test_unicode_in_md_as_md_round_trip(self):
+        self.md_as_md_article_round_trip("# üöäÜÖÄß foo")
 
 
 if __name__ == '__main__':

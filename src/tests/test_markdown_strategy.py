@@ -4,8 +4,8 @@ from hypothesis.strategies import text, from_regex, one_of, lists
 import unittest
 
 
-word_regex = r"[a-zA-Z0-9öäüÖÄÜß\-_=§\"'\.~*+\/]+"
-subsequent_word_regex = r"([ \t]" + word_regex + ")*"
+word_regex = r"[a-zA-Z0-9öäüÖÄÜß\?\-_=§\.+\/\\]+"
+subsequent_word_regex = r"( " + word_regex + ")*"
 words_strategy = from_regex(r"^" + word_regex + subsequent_word_regex + r"$", fullmatch=True)
 mds_spans = {
     "standard": words_strategy,
