@@ -4,9 +4,11 @@ from hypothesis.strategies import text, from_regex, one_of, lists
 import unittest
 
 
-word_regex = r"[a-zA-Z0-9öäüÖÄÜß\?\-_=§\.+\/\\]+"
+word_regex = r"[a-zA-Z0-9öäüÖÄÜß\?\-_=§\.+\/]+"
 subsequent_word_regex = r"( " + word_regex + ")*"
 words_strategy = from_regex(r"^" + word_regex + subsequent_word_regex + r"$", fullmatch=True)
+programming_languages = r"(python|javascript|c\+\+|c#|c|bash|java|kotlin|go|docker|haskell|" + \
+                        r"fortran|d|pascal|swift|rust|php|perl|r|julia|plaintext)"
 mds_spans = {
     "standard": words_strategy,
     "em": words_strategy.map(lambda x: "*" + x + "*"),
@@ -31,8 +33,8 @@ mds_blocks = {
     "h6": from_regex(r"^###### " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
     "ol": markdown_spans.map(lambda x: "1. " + x),
     "ul": markdown_spans.map(lambda x: "* " + x),
-    "pre": from_regex(r"^```[ \t]*(\w+)?[ \t]*\n" +
-                      r"\w+([\w \t\(\)\[\]\{\}\:\-><\"\'\/\+\n=,#$%&|~\*;?§@]+)*\n```$", fullmatch=True)
+    "pre": from_regex(r"^```" + programming_languages + r"\n" +
+                      r"\w+([\w \(\)\[\]\{\}\:\-><\"\'\/\+\n=,#$%&|~\*;?§@]+)*\n```$", fullmatch=True)
 }
 markdown_text = lists(one_of(*tuple([mds_blocks[key] for key in mds_blocks.keys()])), min_size=1
                       ).map(lambda x: "\n\n".join(x))

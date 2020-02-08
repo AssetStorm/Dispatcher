@@ -26,6 +26,9 @@ class RoundTripTestCase(unittest.TestCase):
                                         content_type="multipart/form-data")
             if response.status_code != 200:
                 print(response.data)
+                print("Input:")
+                print(md_text)
+                print("---------------")
             self.assertEqual(200, response.status_code)
             self.assertEqual(article_markdown, str(response.data, encoding='utf-8'))
 
