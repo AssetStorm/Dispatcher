@@ -32,7 +32,7 @@ class RoundTripTestCase(unittest.TestCase):
             self.assertEqual(200, response.status_code)
             self.assertEqual(article_markdown, str(response.data, encoding='utf-8'))
 
-    @settings(deadline=timedelta(milliseconds=500))
+    @settings(deadline=timedelta(milliseconds=1000), max_examples=10)
     @given(markdown_text)
     def test_md_as_md_round_trip(self, md_text):
         self.md_as_md_article_round_trip(md_text)

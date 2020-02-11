@@ -4,7 +4,7 @@ from hypothesis.strategies import text, from_regex, one_of, lists
 import unittest
 
 
-word_regex = r"[a-zA-Z0-9öäüÖÄÜß\?\-_=§\.+\/]+"
+word_regex = r"[a-zA-Z0-9öäüÖÄÜß\?\-=§\.+\/]+"
 subsequent_word_regex = r"( " + word_regex + ")*"
 words_strategy = from_regex(r"^" + word_regex + subsequent_word_regex + r"$", fullmatch=True)
 programming_languages = r"(python|javascript|c\+\+|c#|c|bash|java|kotlin|go|docker|haskell|" + \
@@ -16,9 +16,7 @@ mds_spans = {
     "strong_em": words_strategy.map(lambda x: "***" + x + "***"),
     "strike_through": words_strategy.map(lambda x: "~~" + x + "~~"),
     "a": from_regex(r"^\[" + word_regex + subsequent_word_regex + r"\]" +
-                    r"\(https?://[\w+\.]+([ \t]\"" + word_regex + subsequent_word_regex + r"\")?\)$", fullmatch=True),
-    "img": from_regex(r"^\!\[[a-zA-Z0-9öäüÖÄÜß\-_=§\"'\.~*+\/ \t]*\]" +
-                      r"\([\w+\.]+([ \t]\"" + word_regex + subsequent_word_regex + r"\")?\)$", fullmatch=True),
+                    r"\(https?://[\w+\.]+\)$", fullmatch=True),
     "code": words_strategy.map(lambda x: "`" + x + "`"),
     "fspath": from_regex(r"<fs-path>" + word_regex + subsequent_word_regex + r"</fs-path>", fullmatch=True)
 }
@@ -31,10 +29,12 @@ mds_blocks = {
     "h4": from_regex(r"^#### " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
     "h5": from_regex(r"^##### " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
     "h6": from_regex(r"^###### " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
-    "ol": markdown_spans.map(lambda x: "1. " + x),
-    "ul": markdown_spans.map(lambda x: "* " + x),
+    "ol": lists(markdown_spans.map(lambda x: "1. " + x), min_size=1).map(lambda x: "\n".join(x)),
+    "ul": lists(markdown_spans.map(lambda x: "* " + x), min_size=1).map(lambda x: "\n".join(x)),
     "pre": from_regex(r"^```" + programming_languages + r"\n" +
-                      r"\w+([\w \(\)\[\]\{\}\:\-><\"\'\/\+\n=,#$%&|~\*;?§@]+)*\n```$", fullmatch=True)
+                      r"\w+([\w \(\)\[\]\{\}\:\-><\"\'\/\+\n=,#$%&|~\*;?§@]+)*\n```$", fullmatch=True),
+    "img": from_regex(r"^\!\[([a-zA-Z0-9öäüÖÄÜß\-_=§\"'\.~*+\/]+( [a-zA-Z0-9öäüÖÄÜß\-_=§\"'\.~*+\/]+)*)?\]" +
+                      r"\([\w+\.]+( \"" + word_regex + subsequent_word_regex + r"\")\)$", fullmatch=True),
 }
 markdown_text = lists(one_of(*tuple([mds_blocks[key] for key in mds_blocks.keys()])), min_size=1
                       ).map(lambda x: "\n\n".join(x))
@@ -78,13 +78,6 @@ class MarkdownStrategyTestCase(unittest.TestCase):
         self.assertEqual(2, len(t.split("](")))
         self.assertTrue(t.endswith(")"), msg=t)
 
-    @given(mds_spans["img"])
-    def test_img_strategy(self, t: str):
-        self.assertEqual(t.strip(), t)
-        self.assertTrue(t.startswith("!["))
-        self.assertEqual(2, len(t.split("](")))
-        self.assertTrue(t.endswith(")"))
-
     @given(mds_spans["code"])
     def test_code_strategy(self, t: str):
         self.assertEqual(t.strip(), t)
@@ -108,6 +101,13 @@ class MarkdownStrategyTestCase(unittest.TestCase):
         lines = t.splitlines()
         self.assertTrue(lines[0].startswith("```"))
         self.assertTrue(lines[-1].endswith("```"))
+
+    @given(mds_blocks["img"])
+    def test_img_strategy(self, t: str):
+        self.assertEqual(t.strip(), t)
+        self.assertTrue(t.startswith("!["))
+        self.assertEqual(2, len(t.split("](")))
+        self.assertTrue(t.endswith("\")"))
 
     @given(markdown_text)
     def test_markdown_text_strategy(self, t: str):
