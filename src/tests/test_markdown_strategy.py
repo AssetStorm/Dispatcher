@@ -5,36 +5,36 @@ import unittest
 
 
 word_regex = r"[a-zA-Z0-9öäüÖÄÜß\?\-=§\.+\/]+"
-subsequent_word_regex = r"( " + word_regex + ")*"
-words_strategy = from_regex(r"^" + word_regex + subsequent_word_regex + r"$", fullmatch=True)
+sentence_regex = r"( " + word_regex + ")*"
+sentence_strategy = from_regex(r"^" + word_regex + sentence_regex + r"$", fullmatch=True)
 programming_languages = r"(python|javascript|c\+\+|c#|c|bash|java|kotlin|go|docker|haskell|" + \
                         r"fortran|d|pascal|swift|rust|php|perl|r|julia|plaintext)"
 mds_spans = {
-    "standard": words_strategy,
-    "em": words_strategy.map(lambda x: "*" + x + "*"),
-    "strong": words_strategy.map(lambda x: "**" + x + "**"),
-    "strong_em": words_strategy.map(lambda x: "***" + x + "***"),
-    "strike_through": words_strategy.map(lambda x: "~~" + x + "~~"),
-    "a": from_regex(r"^\[" + word_regex + subsequent_word_regex + r"\]" +
+    "standard": sentence_strategy,
+    "em": sentence_strategy.map(lambda x: "*" + x + "*"),
+    "strong": sentence_strategy.map(lambda x: "**" + x + "**"),
+    "strong_em": sentence_strategy.map(lambda x: "***" + x + "***"),
+    "strike_through": sentence_strategy.map(lambda x: "~~" + x + "~~"),
+    "a": from_regex(r"^\[" + word_regex + sentence_regex + r"\]" +
                     r"\(https?://[\w+\.]+\)$", fullmatch=True),
-    "code": words_strategy.map(lambda x: "`" + x + "`"),
-    "fspath": from_regex(r"<fs-path>" + word_regex + subsequent_word_regex + r"</fs-path>", fullmatch=True)
+    "code": sentence_strategy.map(lambda x: "`" + x + "`"),
+    "fspath": from_regex(r"<fs-path>" + word_regex + sentence_regex + r"</fs-path>", fullmatch=True)
 }
 markdown_spans = lists(one_of(*tuple([mds_spans[key] for key in mds_spans.keys()])), min_size=1, max_size=15
                        ).map(lambda x: " ".join(x))
 mds_blocks = {
-    "h1": from_regex(r"^# " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
-    "h2": from_regex(r"^## " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
-    "h3": from_regex(r"^### " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
-    "h4": from_regex(r"^#### " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
-    "h5": from_regex(r"^##### " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
-    "h6": from_regex(r"^###### " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
+    "h1": from_regex(r"^# " + word_regex + sentence_regex + r"$", fullmatch=True),
+    "h2": from_regex(r"^## " + word_regex + sentence_regex + r"$", fullmatch=True),
+    "h3": from_regex(r"^### " + word_regex + sentence_regex + r"$", fullmatch=True),
+    "h4": from_regex(r"^#### " + word_regex + sentence_regex + r"$", fullmatch=True),
+    "h5": from_regex(r"^##### " + word_regex + sentence_regex + r"$", fullmatch=True),
+    "h6": from_regex(r"^###### " + word_regex + sentence_regex + r"$", fullmatch=True),
     "ol": lists(markdown_spans.map(lambda x: "1. " + x), min_size=1, max_size=15).map(lambda x: "\n".join(x)),
     "ul": lists(markdown_spans.map(lambda x: "* " + x), min_size=1, max_size=15).map(lambda x: "\n".join(x)),
     "pre": from_regex(r"^```" + programming_languages + r"\n" +
                       r"\w+([\w \(\)\[\]\{\}\:\-><\"\'\/\+\n=,#$%&|~\*;?§@]+)*\n```$", fullmatch=True),
     "img": from_regex(r"^\!\[([a-zA-Z0-9öäüÖÄÜß\-_=§\"'\.~*+\/]+( [a-zA-Z0-9öäüÖÄÜß\-_=§\"'\.~*+\/]+)*)?\]" +
-                      r"\([\w+\.]+( \"" + word_regex + subsequent_word_regex + r"\")\)$", fullmatch=True),
+                      r"\([\w+\.]+( \"" + word_regex + sentence_regex + r"\")\)$", fullmatch=True),
 }
 markdown_text = lists(one_of(*tuple([mds_blocks[key] for key in mds_blocks.keys()])), min_size=1, max_size=20
                       ).map(lambda x: "\n\n".join(x))
@@ -42,7 +42,7 @@ markdown_text = lists(one_of(*tuple([mds_blocks[key] for key in mds_blocks.keys(
 
 class MarkdownStrategyTestCase(unittest.TestCase):
     @settings(verbosity=Verbosity.verbose)
-    @given(words_strategy)
+    @given(sentence_strategy)
     def test_words_strategy(self, t: str):
         self.assertEqual(t.strip(), t)
         self.assertEqual(1, len(t.splitlines()))
