@@ -109,7 +109,7 @@ class MarkdownStrategyTestCase(unittest.TestCase):
         self.assertEqual(2, len(t.split("](")))
         self.assertTrue(t.endswith("\")"))
 
-    @settings(max_examples=100)
+    @settings(max_examples=20)
     @given(markdown_text)
     def test_markdown_text_strategy(self, t: str):
         self.assertEqual(t.strip(), t)
