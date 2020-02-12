@@ -34,7 +34,7 @@ class RoundTripTestCase(unittest.TestCase):
 
     @settings(deadline=timedelta(milliseconds=1000), max_examples=10)
     @given(markdown_text)
-    def test_md_as_md_round_trip(self, md_text):
+    def test_md_as_md_round_trip(self, md_text: str):
         self.md_as_md_article_round_trip(md_text)
 
     def test_unicode_in_md_as_md_round_trip(self):
