@@ -101,7 +101,7 @@ class TestConvertMarkdown(unittest.TestCase):
                 "<h2 class=\"subtitle\">Untertitel</h2>" +
                 "<teaser>Vorlauftext</teaser>" +
                 "<author>Von Pina Merkert</author>" +
-                "<p>Text des Artikels.</p><p>Mehrere Abs�tze</p>" +
+                "<p>Text des Artikels.</p><p>Mehrere Absätze</p>" +
                 "</article-standard>", str(response.data, encoding='utf-8'))
 
 
