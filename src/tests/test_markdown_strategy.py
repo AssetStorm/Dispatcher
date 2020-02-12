@@ -20,7 +20,7 @@ mds_spans = {
     "code": words_strategy.map(lambda x: "`" + x + "`"),
     "fspath": from_regex(r"<fs-path>" + word_regex + subsequent_word_regex + r"</fs-path>", fullmatch=True)
 }
-markdown_spans = lists(one_of(*tuple([mds_spans[key] for key in mds_spans.keys()])), min_size=1
+markdown_spans = lists(one_of(*tuple([mds_spans[key] for key in mds_spans.keys()])), min_size=1, max_size=15
                        ).map(lambda x: " ".join(x))
 mds_blocks = {
     "h1": from_regex(r"^# " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
@@ -29,14 +29,14 @@ mds_blocks = {
     "h4": from_regex(r"^#### " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
     "h5": from_regex(r"^##### " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
     "h6": from_regex(r"^###### " + word_regex + subsequent_word_regex + r"$", fullmatch=True),
-    "ol": lists(markdown_spans.map(lambda x: "1. " + x), min_size=1).map(lambda x: "\n".join(x)),
-    "ul": lists(markdown_spans.map(lambda x: "* " + x), min_size=1).map(lambda x: "\n".join(x)),
+    "ol": lists(markdown_spans.map(lambda x: "1. " + x), min_size=1, max_size=15).map(lambda x: "\n".join(x)),
+    "ul": lists(markdown_spans.map(lambda x: "* " + x), min_size=1, max_size=15).map(lambda x: "\n".join(x)),
     "pre": from_regex(r"^```" + programming_languages + r"\n" +
                       r"\w+([\w \(\)\[\]\{\}\:\-><\"\'\/\+\n=,#$%&|~\*;?§@]+)*\n```$", fullmatch=True),
     "img": from_regex(r"^\!\[([a-zA-Z0-9öäüÖÄÜß\-_=§\"'\.~*+\/]+( [a-zA-Z0-9öäüÖÄÜß\-_=§\"'\.~*+\/]+)*)?\]" +
                       r"\([\w+\.]+( \"" + word_regex + subsequent_word_regex + r"\")\)$", fullmatch=True),
 }
-markdown_text = lists(one_of(*tuple([mds_blocks[key] for key in mds_blocks.keys()])), min_size=1
+markdown_text = lists(one_of(*tuple([mds_blocks[key] for key in mds_blocks.keys()])), min_size=1, max_size=20
                       ).map(lambda x: "\n\n".join(x))
 
 
@@ -109,27 +109,50 @@ class MarkdownStrategyTestCase(unittest.TestCase):
         self.assertEqual(2, len(t.split("](")))
         self.assertTrue(t.endswith("\")"))
 
+    @settings(max_examples=100)
     @given(markdown_text)
     def test_markdown_text_strategy(self, t: str):
         self.assertEqual(t.strip(), t)
-        in_pre_block = False
-        is_p = True
+        environment = None
         for i, line in enumerate(t.splitlines()):
-            if line.startswith("```") and is_p and not in_pre_block:
-                in_pre_block = True
-                is_p = True
+            if environment == "ol":
+                if line.startswith('1. '):
+                    environment = "ol"
+                else:
+                    environment = None
+                    self.assertEqual("", line.strip())
+                continue
+            if environment == "ul":
+                if line.startswith('* '):
+                    environment = "ul"
+                else:
+                    environment = None
+                    self.assertEqual("", line.strip())
+                continue
+            if environment == "pre":
+                if line.endswith("```"):
+                    environment = "pre-end"
+                continue
+            if environment not in ["pre"] and line.startswith('1. '):
+                environment = "ol"
+                self.assertEqual(line.strip(), line)
+                continue
+            if environment not in ["pre"] and line.startswith('* '):
+                environment = "ul"
+                self.assertEqual(line.strip(), line)
+                continue
+            if environment not in ["pre"] and line.startswith('```'):
+                environment = "pre"
                 self.assertEqual(line.lstrip(), line)
                 continue
-            if not in_pre_block:
-                if is_p:
-                    self.assertEqual(line.strip(), line)
-                    is_p = False
-                else:
-                    self.assertEqual("", line.strip())
-                    is_p = True
-            if line.endswith("```") and is_p and in_pre_block:
-                in_pre_block = False
-                is_p = False
+            if environment is None:
+                self.assertGreater(len(line.strip()), 0)
+                environment = "any"
+                continue
+            else:
+                self.assertEqual("", line.strip())
+                environment = None
+                continue
 
 
 if __name__ == '__main__':
