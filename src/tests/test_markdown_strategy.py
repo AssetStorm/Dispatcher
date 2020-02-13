@@ -4,7 +4,7 @@ from hypothesis.strategies import text, from_regex, one_of, lists
 import unittest
 
 
-word_regex = r"[a-zA-Z0-9öäüÖÄÜß\?\-=§\.+\/]+"
+word_regex = r"[a-zA-Z0-9öäüÖÄÜßáàéè€@&\?\-=§\.+\/]+"
 sentence_regex = r"( " + word_regex + ")*"
 sentence_strategy = from_regex(r"^" + word_regex + sentence_regex + r"$", fullmatch=True)
 programming_languages = r"(python|javascript|c\+\+|c#|c|bash|java|kotlin|go|docker|haskell|" + \
