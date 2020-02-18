@@ -13,7 +13,7 @@ services:
     image: assetstorm/assetstorm:latest
     restart: unless-stopped
     depends_on: 
-        - assetstorm-postgres
+      - assetstorm-postgres
     environment:
       SERVER_NAME: "assetstorm"
       LC_ALL: "C.UTF-8"
@@ -31,10 +31,7 @@ services:
     depends_on:
       - assetstorm
     environment:
-      - PYTHON_HOST=assetstorm
-
-  s3:
-    image: minio/minio
+      PYTHON_HOST: assetstorm
 
   markdown2assetstorm:
     image: assetstorm/markdown2assetstorm:latest
@@ -54,7 +51,7 @@ services:
     depends_on:
       - assetstorm
     environment:
-      ASSETSTORM_URL: "assetstorm-nginx"
+      ASSETSTORM_URL: "http://assetstorm-nginx"
 
   assetstorm2template-nginx:
     restart: unless-stopped
@@ -64,13 +61,13 @@ services:
     depends_on:
       - assetstorm2template
     environment:
-      PYTHON_HOST: "markdown2assetstorm"
+      PYTHON_HOST: "assetstorm"
 
   dispatcher:
-    build: ./dispatcher
+    image: assetstorm/dispatcher:latest
     restart: unless-stopped
     environment:
-      MARKDOWN2ASSETSTORM_URL: "markdown2assetstorm-nginx"
+      MARKDOWN2ASSETSTORM_URL: "http://markdown2assetstorm-nginx"
       SERVER_NAME: "dispatcher"
 
   dispatcher-nginx:
