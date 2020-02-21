@@ -33,4 +33,20 @@ content: MD_BLOCK
 
 Text des Artikels
 
-<!--- -->
+<!---
+article_link: 
+  type: article-link-container
+  link_description: Dokumentation
+  link: 
+    type: span-ct-link
+bibliography:
+  - type: bibliography-reference-ct-intern
+    author: Pina Merkert
+    title: Djangolino
+    subtitle: Webentwicklung mit Django und wenig Code
+    issue: 17
+    year: 19
+    page: 127
+  - type: bibliography-reference-web
+    url: https://ct.de
+-->
