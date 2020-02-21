@@ -104,6 +104,32 @@ class TestConvertMarkdown(unittest.TestCase):
                 "<p>Text des Artikels.</p><p>Mehrere Absätze</p>" +
                 "</article-standard>", str(response.data, encoding='utf-8'))
 
+    def test_example_article(self):
+        with open('example-article.md', 'rb') as eafp:
+            data = {'example-article.md': eafp}
+            with app.test_client() as test_client:
+                response = test_client.post('/convert/markdown/markdown',
+                                            data=data,
+                                            content_type="multipart/form-data")
+                self.assertEqual(200, response.status_code)
+                self.assertEqual(
+                    "<!---\ntype: article-standard\n" +
+                    "x_id: 1234567890123456789\n" +
+                    "catchphrase: Testartikel\n" +
+                    "column: Wissen\n" +
+                    "working_title: Standard-Testartikel\n" +
+                    "title: MD_BLOCK\n-->\n\n" +
+                    "# Titel\n\n<!---\n" +
+                    "subtitle: MD_BLOCK\n-->\n\n" +
+                    "## Untertitel\n\n<!---\n" +
+                    "teaser: MD_BLOCK\n-->\n\n" +
+                    "**Vorlauftext**\n\n<!---\n" +
+                    "author: MD_BLOCK\n-->\n\n" +
+                    "Pina Merkert\n\n<!---\n" +
+                    "content: MD_BLOCK\n-->\n\n" +
+                    "Text des Artikels" +
+                    "\n\n<!--- -->", str(response.data, encoding='utf-8'))
+
 
 class TestDeliverOpenApiDefinition(unittest.TestCase):
     def setUp(self) -> None:

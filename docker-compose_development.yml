@@ -12,7 +12,7 @@ services:
   assetstorm:
     image: assetstorm/assetstorm:latest
     depends_on: 
-        - assetstorm-postgres
+      - assetstorm-postgres
     environment:
       SERVER_NAME: "assetstorm"
       LC_ALL: "C.UTF-8"
