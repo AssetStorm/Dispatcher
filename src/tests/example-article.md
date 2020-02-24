@@ -34,11 +34,10 @@ content: MD_BLOCK
 Text des Artikels
 
 <!---
-article_link: 
+article_link:
   type: article-link-container
   link_description: Dokumentation
-  link: 
-    type: span-ct-link
+  link: <ctlink />
 bibliography:
   - type: bibliography-reference-ct-intern
     author: Pina Merkert

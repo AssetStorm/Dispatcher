@@ -27,9 +27,11 @@ def magic_yaml_block(data: dict) -> str:
     for key in data:
         if type(data[key]) in [int, float, str]:
             md += "\n" + str(key) + ": " + data[key]
+        elif type(data[key]) is dict:
+            md += "\n" + str(key) + ": \n" + "\n".join(["  " + line for line in yaml.safe_dump(data[key]).splitlines()])
         else:
             md += "\n" + str(key) + ": " + str(data[key])
-    md += "-->\n\n"
+    md += "\n-->\n\n"
     return md
 
 

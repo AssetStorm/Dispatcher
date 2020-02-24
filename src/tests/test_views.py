@@ -5,6 +5,7 @@ from test.support import EnvironmentVarGuard
 from markup_helpers import MdBlock, magic_yaml_block
 import unittest
 import io
+import os
 
 
 class TestConvertMarkdown(unittest.TestCase):
@@ -90,13 +91,12 @@ class TestConvertMarkdown(unittest.TestCase):
                              "link": {"type": "span-ct-link"}},
             "bibliography": []
         })
-        print(article_markdown)
         data = {'article.md': (io.BytesIO(article_markdown.encode('utf-8')), "article.md")}
         with app.test_client() as test_client:
             response = test_client.post('/convert/markdown/proof_html',
                                         data=data,
                                         content_type="multipart/form-data")
-            #self.assertEqual(200, response.status_code)
+            self.assertEqual(200, response.status_code)
             self.assertEqual(
                 "<article-standard>" +
                 "<x_id>1234567890123456789</x_id>" +
@@ -107,19 +107,25 @@ class TestConvertMarkdown(unittest.TestCase):
                 "<teaser>Vorlauftext</teaser>" +
                 "<author>Von Pina Merkert</author>" +
                 "<p>Text des Artikels.</p><p>Mehrere Absätze</p>" +
+                "<article-link>" +
+                "<article-link-description>Dokumentation:</article-link-description> <ctlink />" +
+                "</article-link>" +
+                "<div class=\"bibliography\"><h3>Literatur</h3><ol></ol></div>" +
                 "</article-standard>", str(response.data, encoding='utf-8'))
 
     def test_example_article_markdown(self):
-        with open('example-article.md', 'rb') as eafp:
-            data = {'example-article.md': eafp}
+        filename = 'example-article.md'
+        file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), filename)
+        with open(file_path, 'rb') as ea_fp:
+            data = {filename: ea_fp}
             with app.test_client() as test_client:
                 response = test_client.post('/convert/markdown/markdown',
                                             data=data,
                                             content_type="multipart/form-data")
-                #self.assertEqual(200, response.status_code)
+                self.assertEqual(200, response.status_code)
                 loaded_markdown = str(response.data, encoding='utf-8')
-        with open('example-article.md', 'rb') as eafp:
-            self.assertEqual(str(eafp.read(), encoding='utf-8'), loaded_markdown)
+        with open(file_path, 'rb') as ea_fp:
+            self.assertEqual(str(ea_fp.read(), encoding='utf-8'), loaded_markdown)
 
 
 class TestDeliverOpenApiDefinition(unittest.TestCase):

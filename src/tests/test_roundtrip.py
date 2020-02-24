@@ -18,7 +18,12 @@ class RoundTripTestCase(unittest.TestCase):
                            "subtitle: MD_BLOCK\n-->\n\n## Untertitel\n\n<!---\n" + \
                            "teaser: MD_BLOCK\n-->\n\n**Vorlauftext**\n\n<!---\n" + \
                            "author: MD_BLOCK\n-->\n\nPina Merkert\n\n<!---\n" + \
-                           "content: MD_BLOCK\n-->\n\n" + md_text + "\n\n<!--- -->"
+                           "content: MD_BLOCK\n-->\n\n" + md_text + "\n\n<!---\n" + \
+                           "article_link:\n" + \
+                           "  type: article-link-container\n" + \
+                           "  link_description: Dokumentation\n" + \
+                           "  link: <ctlink />\n" + \
+                           "bibliography:\n-->"
         data = {'article.md': (io.BytesIO(article_markdown.encode('utf-8')), "article.md")}
         with app.test_client() as test_client:
             response = test_client.post('/convert/markdown/markdown',
@@ -29,6 +34,8 @@ class RoundTripTestCase(unittest.TestCase):
                 print("Input:")
                 print(md_text)
                 print("---------------")
+                print(response.data)
+                print("===============")
             self.assertEqual(200, response.status_code)
             self.assertEqual(article_markdown, str(response.data, encoding='utf-8'))
 
