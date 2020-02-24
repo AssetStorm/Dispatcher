@@ -31,7 +31,9 @@ Pina Merkert
 content: MD_BLOCK
 -->
 
-Text des Artikels
+Text des Artikels.
+
+Dies ist ein zweiter Absatz.
 
 <!---
 article_link:

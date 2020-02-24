@@ -127,6 +127,31 @@ class TestConvertMarkdown(unittest.TestCase):
         with open(file_path, 'rb') as ea_fp:
             self.assertEqual(str(ea_fp.read(), encoding='utf-8'), loaded_markdown)
 
+    def test_example_article_sy_xml(self):
+        filename = 'example-article.md'
+        file_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), filename)
+        with open(file_path, 'rb') as ea_fp:
+            data = {filename: ea_fp}
+            with app.test_client() as test_client:
+                response = test_client.post('/convert/markdown/sy_xml',
+                                            data=data,
+                                            content_type="multipart/form-data")
+                self.assertEqual(200, response.status_code)
+                loaded_xml = str(response.data, encoding='utf-8')
+        print(loaded_xml)
+        self.assertEqual(
+            "<document dbref=\"1234567890123456789\">\n" +
+            "<title>Untertitel</title>\n<subtitle>Titel</subtitle>\n<abstract>Vorlauftext</abstract>\n" +
+            "<textel>\n" +
+            "<paragraph type=\"standard\" id=\"e0\">Text des Artikels.</paragraph>\n" +
+            "<paragraph type=\"standard\" id=\"e1\">Dies ist ein zweiter Absatz.</paragraph>\n" +
+            "<shorturlwrapper><label>Dokumentation: </label><shorturl></shorturl></shorturlwrapper>\n" +
+            "<bibliography><title>Literatur</title>" +
+            "<internal brand=\"ct\" year=\"19\" month=\"17\" page=\"127\">" +
+            "Pina Merkert, Djangolino, Webentwicklung mit Django und wenig Code, c't 17/19, S. 127</internal>" +
+            "<external href=\"https://ct.de\">https://ct.de</external></bibliography>\n" +
+            "</textel>\n</document>", loaded_xml)
+
 
 class TestDeliverOpenApiDefinition(unittest.TestCase):
     def setUp(self) -> None:
