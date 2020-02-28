@@ -1,0 +1,37 @@
+{
+  "type": "article-table-of-contents",
+  "title": "Inhaltsverzeichnis",
+  "x_id": "1234567890123456789",
+  "content": [
+    {"type": "toc-block-main", "entries": [
+      {"type": "toc-heading-container", "title": "Block 1", "entries": [
+        {"type": "toc-small", "spans": [
+            {"type": "span-strong", "text": "Kurztext 1"},
+            {"type": "span-regular", "text": " mit Ergänzung"}
+        ], "page": "13"},
+        {"type": "toc-small", "spans": [
+            {"type": "span-strong", "text": "Kurztext 2"},
+            {"type": "span-regular", "text": " mit Ergänzung"}
+        ], "page": "17"}
+      ]},
+      {"type": "toc-small", "spans": [
+        {"type": "span-strong", "text": "Kurztext 3"},
+        {"type": "span-regular", "text": " mit Ergänzung"}
+      ], "page": "21"},
+      {"type": "toc-heading-container", "title": "Block 2", "entries": [
+        {"type": "toc-small", "spans": [
+            {"type": "span-strong", "text": "Kurztext 4"},
+            {"type": "span-regular", "text": " mit Ergänzung"}
+        ], "page": "130"},
+        {"type": "toc-small", "spans": [
+            {"type": "span-strong", "text": "Kurztext 5"},
+            {"type": "span-regular", "text": " mit Ergänzung"}
+        ], "page": "134"},
+        {"type": "toc-small", "spans": [
+            {"type": "span-strong", "text": "Kurztext 6"},
+            {"type": "span-regular", "text": " mit Ergänzung"}
+        ], "page": "138"}
+      ]}
+    ]}
+  ]
+}

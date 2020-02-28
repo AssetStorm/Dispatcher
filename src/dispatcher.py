@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from flask import Flask, request, Response
-from response_helpers import build_text_response, build_json_response
+from response_helpers import build_text_response, build_json_response, get_mime_type
 from hash_helpers import hash_file
 from assetstorm_helpers import strip_formatting
 from settings import Settings
@@ -12,7 +12,7 @@ app = Flask(__name__)
 
 
 @app.route("/convert/markdown/<string:target_format>", methods=['POST'])
-def convert(target_format: str) -> Response:
+def convert_markdown(target_format: str) -> Response:
     article_filename = None
     for filename in request.files:
         if filename.endswith('.md'):
@@ -68,6 +68,21 @@ def convert(target_format: str) -> Response:
             app, {"Error": "The document must contain exactly one article. Did you forget the header?"},
             status=400)
     article = as_tree['blocks'][0]
+    schema_response = requests.get(
+        Settings().as_url + "/get_schema?type_name=" + article['type'])
+    if schema_response.status_code != 200:
+        return build_json_response(
+            app, {"Error": "Unable to load the schema of this article type." +
+                           " This was the error:" + schema_response.json()['Error']},
+            status=400)
+    article_schema = schema_response.json()
+    for key in article_schema.keys():
+        if article_schema[key] == 1:
+            article[key] = strip_formatting(article[key])
+    return convert_asset_storm(target_format, article)
+
+
+def convert_asset_storm(target_format: str, article: dict) -> Response:
     if 'type' not in article:
         return build_json_response(
             app, {"Error": "The document did not define an article type. Please add a \"type\" key."},
@@ -94,17 +109,6 @@ def convert(target_format: str) -> Response:
         json={"x_id": article['x_id']},
         headers={'Content-Type': 'application/json'})
     found_assets = article_query_response.json()['assets']
-    schema_response = requests.get(
-        Settings().as_url + "/get_schema?type_name=" + article['type'])
-    if schema_response.status_code != 200:
-        return build_json_response(
-            app, {"Error": "Unable to load the schema of this article type." +
-                           " This was the error:" + schema_response.json()['Error']},
-            status=400)
-    article_schema = schema_response.json()
-    for key in article_schema.keys():
-        if article_schema[key] == 1:
-            article[key] = strip_formatting(article[key])
     if len(found_assets) >= 1:
         # found:
         #   load the article, and search for images and other blobs like video; compare the hashes
@@ -126,7 +130,12 @@ def convert(target_format: str) -> Response:
             status=400)
     new_id = article_save_response.json()['id']
     # reload the saved article from AssetStorm
-    loaded_article_response = requests.get(Settings().as_url + "/find?id=" + new_id)
+    loaded_article_response = requests.get(Settings().as_url + "/load?id=" + new_id)
+    if loaded_article_response.status_code != 200:
+        return build_json_response(
+            app, loaded_article_response.json(),
+            status=400)
+    article = loaded_article_response.json()
     # send the loaded article to the templater and return the result
     templater_response = requests.post(
         Settings().templater_url + "/",
@@ -139,7 +148,12 @@ def convert(target_format: str) -> Response:
         return build_json_response(
             app, templater_response.json(),
             status=400)
-    return build_text_response(app, templater_response.text, mime_type='text/html')
+    return build_text_response(app, templater_response.text, mime_type=get_mime_type(target_format))
+
+
+@app.route("/convert/assetstorm/<string:target_format>", methods=['POST'])
+def convert_asset_storm_post(target_format: str) -> Response:
+    return convert_asset_storm(target_format, request.json)
 
 
 @app.route("/openapi.json", methods=['GET'])

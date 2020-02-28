@@ -3,7 +3,10 @@ from dispatcher import app
 from hypothesis import settings, given
 from datetime import timedelta
 from test_markdown_strategy import markdown_text
+from settings import Settings
 import unittest
+import requests
+import json
 import io
 
 
@@ -39,6 +42,28 @@ class RoundTripTestCase(unittest.TestCase):
             self.assertEqual(200, response.status_code)
             self.assertEqual(article_markdown, str(response.data, encoding='utf-8'))
 
+    def as_through_md_round_trip(self, article: dict):
+        with app.test_client() as test_client:
+            response = test_client.post('/convert/assetstorm/markdown',
+                                        data=json.dumps(article, ensure_ascii=False).encode('utf-8'),
+                                        content_type="application/json")
+            if response.status_code != 200:
+                print(response.data)
+                print("Input:")
+                print(json.dumps(article, indent=2))
+                print("---------------")
+                print(response.data)
+                print("===============")
+            self.assertEqual(200, response.status_code)
+            print(json.dumps(json.loads(str(response.data, encoding='utf-8')), indent=2))
+            md_converter_response = requests.post(
+                Settings().md_conv_url + "/",
+                data=response.data)
+            md_converter_response.encoding = 'utf-8'
+            print(md_converter_response.content)
+            as_tree = md_converter_response.json()
+            self.assertEqual(article, as_tree['blocks'][0])
+
     @settings(deadline=timedelta(milliseconds=1000), max_examples=10)
     @given(markdown_text)
     def test_md_as_md_round_trip(self, md_text: str):
@@ -46,6 +71,11 @@ class RoundTripTestCase(unittest.TestCase):
 
     def test_unicode_in_md_as_md_round_trip(self):
         self.md_as_md_article_round_trip("# üöäÜÖÄß foo")
+
+    def test_toc_round_trip(self):
+        with open("example_toc.json", 'r') as toc_json_file:
+            toc = json.load(toc_json_file)
+        self.as_through_md_round_trip(toc)
 
 
 if __name__ == '__main__':
