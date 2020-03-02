@@ -33,6 +33,12 @@ services:
     environment:
       PYTHON_HOST: "assetstorm"
 
+  assetstorm-jobber:
+    restart: unless-stopped
+    image: jobber:latest
+    volumes:
+     - ./jobberfile:/home/jobberuser/.jobber
+
   markdown2assetstorm:
     image: assetstorm/markdown2assetstorm:latest
 

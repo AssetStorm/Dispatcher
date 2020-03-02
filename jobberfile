@@ -1,0 +1,4 @@
+[jobs]
+- name: Trigger AssetStorm Caching
+  cmd: wget -q http://assetstorm-nginx/update_caches -O /dev/null
+  time: '0 * * * * *'
