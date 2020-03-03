@@ -2,15 +2,20 @@
 from dispatcher import app
 from hypothesis import settings, given
 from datetime import timedelta
+from markdown_helpers import collapse_tree
 from test_markdown_strategy import markdown_text
 from settings import Settings
 import unittest
 import requests
 import json
 import io
+import os
 
 
 class RoundTripTestCase(unittest.TestCase):
+    def tearDown(self) -> None:
+        requests.delete(Settings().as_url + "/delete_all_assets")
+
     def md_as_md_article_round_trip(self, md_text):
         article_markdown = "<!---\ntype: article-standard\n" + \
                            "x_id: 1234567890123456789\n" + \
@@ -55,14 +60,13 @@ class RoundTripTestCase(unittest.TestCase):
                 print(response.data)
                 print("===============")
             self.assertEqual(200, response.status_code)
-            print(json.dumps(json.loads(str(response.data, encoding='utf-8')), indent=2))
             md_converter_response = requests.post(
                 Settings().md_conv_url + "/",
                 data=response.data)
             md_converter_response.encoding = 'utf-8'
-            print(md_converter_response.content)
-            as_tree = md_converter_response.json()
-            self.assertEqual(article, as_tree['blocks'][0])
+            converted_tree = md_converter_response.json()
+            as_tree = collapse_tree(converted_tree['blocks'][0])
+            self.assertEqual(article, as_tree)
 
     @settings(deadline=timedelta(milliseconds=1000), max_examples=10)
     @given(markdown_text)
@@ -73,7 +77,9 @@ class RoundTripTestCase(unittest.TestCase):
         self.md_as_md_article_round_trip("# üöäÜÖÄß foo")
 
     def test_toc_round_trip(self):
-        with open("example_toc.json", 'r') as toc_json_file:
+        with open(os.path.join(
+                os.path.dirname(os.path.realpath(__file__)),
+                "example_toc.json"), 'r') as toc_json_file:
             toc = json.load(toc_json_file)
         self.as_through_md_round_trip(toc)
 

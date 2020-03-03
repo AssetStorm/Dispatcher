@@ -4,6 +4,41 @@ from settings import Settings
 import requests
 
 
+class SchemaLoadError(Exception):
+    def __init__(self, json_err):
+        self.json = json_err
+
+
+def get_schema(type_name: str = None, type_id: int = None) -> dict:
+    if type_id is not None:
+        schema_response = requests.get(
+            Settings().as_url + "/get_schema?type_id=" + str(type_id))
+    else:
+        schema_response = requests.get(
+            Settings().as_url + "/get_schema?type_name=" + type_name)
+    if schema_response.status_code != 200:
+        raise SchemaLoadError({
+            "Error": "Unable to load the schema of this asset type." +
+                     " This was the error:" + schema_response.json()['Error']})
+    article_schema = schema_response.json()
+    return article_schema
+
+
+def get_types_for_parent(type_name: str = None, type_id: int = None) -> list:
+    if type_id is not None:
+        parent_list_response = requests.get(
+            Settings().as_url + "/get_types_for_parent?parent_type_id=" + str(type_id))
+    else:
+        parent_list_response = requests.get(
+            Settings().as_url + "/get_types_for_parent?parent_type_name=" + type_name)
+    if parent_list_response.status_code != 200:
+        raise SchemaLoadError({
+            "Error": "Unable to load the list of parents for this asset type." +
+                     " This was the error:" + parent_list_response.json()['Error']})
+    parent_type_name_list = parent_list_response.json()
+    return parent_type_name_list
+
+
 def strip_formatting(tree: Union[dict, list, str, int]) -> Union[str, int]:
     def render_with_templater(tree_for_templating: dict) -> str:
         response = requests.post(

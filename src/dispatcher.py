@@ -2,7 +2,7 @@
 from flask import Flask, request, Response
 from response_helpers import build_text_response, build_json_response, get_mime_type
 from hash_helpers import hash_file
-from assetstorm_helpers import strip_formatting
+from assetstorm_helpers import strip_formatting, get_schema, SchemaLoadError
 from settings import Settings
 import requests
 import yaml
@@ -68,15 +68,21 @@ def convert_markdown(target_format: str) -> Response:
             app, {"Error": "The document must contain exactly one article. Did you forget the header?"},
             status=400)
     article = as_tree['blocks'][0]
-    schema_response = requests.get(
-        Settings().as_url + "/get_schema?type_name=" + article['type'])
-    if schema_response.status_code != 200:
+    if 'type' not in article:
         return build_json_response(
-            app, {"Error": "Unable to load the schema of this article type." +
-                           " This was the error:" + schema_response.json()['Error']},
+            app, {"Error": "The article has no type. There must be exactly one article asset with a \"type\" key."},
             status=400)
-    article_schema = schema_response.json()
+    try:
+        article_schema = get_schema(article['type'])
+    except SchemaLoadError as load_err:
+        return build_json_response(
+            app, load_err.json,
+            status=400)
     for key in article_schema.keys():
+        if key not in article.keys():
+            return build_json_response(
+                app, {"Error": "The {} misses a {}. Please add a \"{}\" key.".format(article['type'], key, key)},
+                status=400)
         if article_schema[key] == 1:
             article[key] = strip_formatting(article[key])
     return convert_asset_storm(target_format, article)
@@ -114,7 +120,6 @@ def convert_asset_storm(target_format: str, article: dict) -> Response:
         #   load the article, and search for images and other blobs like video; compare the hashes
         #     for all identical hashes insert the existing asset id
         loaded_article_response = requests.get(Settings().as_url + "/find?id=" + found_assets[0]['id'])
-        print(loaded_article_response.text)
         #   insert the id of the article in the tree
         loaded_article = loaded_article_response.json()
         article['id'] = loaded_article['id']

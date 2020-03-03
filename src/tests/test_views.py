@@ -54,7 +54,7 @@ class TestConvertMarkdown(unittest.TestCase):
         article_markdown += "-->"
         data = {'article.md': (io.BytesIO(article_markdown.encode('utf-8')), "article.md")}
         response = self.request_with_error(data)
-        self.assertEqual({"Error": "The document did not define an article type. Please add a \"type\" key."},
+        self.assertEqual({"Error": "The document was empty."},
                          response.get_json())
 
     def test_upload_missing_x_id(self):
@@ -71,7 +71,7 @@ class TestConvertMarkdown(unittest.TestCase):
         })
         data = {'article.md': (io.BytesIO(article_markdown.encode('utf-8')), "article.md")}
         response = self.request_with_error(data)
-        self.assertEqual({"Error": "The document did not reference an x_id. Please add a \"x_id\" key."},
+        self.assertEqual({"Error": "The article-standard misses a x_id. Please add a \"x_id\" key."},
                          response.get_json())
 
     def test_convert(self):
@@ -107,6 +107,47 @@ class TestConvertMarkdown(unittest.TestCase):
                 "<teaser>Vorlauftext</teaser>" +
                 "<author>Von Pina Merkert</author>" +
                 "<p>Text des Artikels.</p><p>Mehrere Absätze</p>" +
+                "<article-link>" +
+                "<article-link-description>Dokumentation:</article-link-description> <ctlink />" +
+                "</article-link>" +
+                "<div class=\"bibliography\"><h3>Literatur</h3><ol></ol></div>" +
+                "</article-standard>", str(response.data, encoding='utf-8'))
+
+    def test_standard_article_with_email_link(self):
+        article_markdown = magic_yaml_block({
+            "type": "article-standard",
+            "x_id": "1234567890123456789",
+            "catchphrase": "Testartikel",
+            "column": "Wissen",
+            "working_title": "Standard-Testartikel",
+            "title": MdBlock("# Titel"),
+            "subtitle": MdBlock("## Untertitel"),
+            "teaser": MdBlock("**Vorlauftext**"),
+            "author": MdBlock("Pina Merkert"),
+            "content": MdBlock("Text des Artikels.\n\nAbsatz mit Mailto: [pmk@ct.de](mailto:pmk@ct.de)\n\nAbsatz 3."),
+            "article_link": {"type": "article-link-container",
+                             "link_description": "Dokumentation",
+                             "link": {"type": "span-ct-link"}},
+            "bibliography": []
+        })
+        data = {'article.md': (io.BytesIO(article_markdown.encode('utf-8')), "article.md")}
+        with app.test_client() as test_client:
+            response = test_client.post('/convert/markdown/proof_html',
+                                        data=data,
+                                        content_type="multipart/form-data")
+            self.assertEqual(200, response.status_code)
+            self.assertEqual(
+                "<article-standard>" +
+                "<x_id>1234567890123456789</x_id>" +
+                "<catchphrase>Testartikel</catchphrase>" +
+                "<magazine-column>Wissen</magazine-column>" +
+                "<h1>Titel</h1>" +
+                "<h2 class=\"subtitle\">Untertitel</h2>" +
+                "<teaser>Vorlauftext</teaser>" +
+                "<author>Von Pina Merkert</author>" +
+                "<p>Text des Artikels.</p><p>Absatz mit Mailto: " +
+                "<a href=\"mailto:pmk@ct.de\">pmk@ct.de</a></p>" +
+                "<p>Absatz 3.</p>" +
                 "<article-link>" +
                 "<article-link-description>Dokumentation:</article-link-description> <ctlink />" +
                 "</article-link>" +
