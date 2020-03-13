@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 from dispatcher import app
 from flask import Response
-from test.support import EnvironmentVarGuard
 from markup_helpers import MdBlock, magic_yaml_block
+from unittest.mock import patch
 import unittest
 import io
 import os
@@ -197,7 +197,6 @@ class TestConvertMarkdown(unittest.TestCase):
 class TestDeliverOpenApiDefinition(unittest.TestCase):
     def setUp(self) -> None:
         app.testing = True
-        self.env = EnvironmentVarGuard()
 
     def test_default_first_server(self):
         with app.test_client() as test_client:
@@ -209,35 +208,36 @@ class TestDeliverOpenApiDefinition(unittest.TestCase):
         self.assertEqual('AssetStorm-Dispatcher', api_def['info']['title'])
         self.assertEqual({'url': 'http://dispatcher.assetstorm.pinae.net'}, api_def['servers'][0])
 
+    @patch('os.getenv', lambda *key: {
+        'SERVER_NAME': 'https://test.org/foo/bar/baz'
+    }[key[0]])
     def test_server_by_env(self):
-        self.env.set('SERVER_NAME', 'https://test.org/foo/bar/baz')
-        with self.env:
-            with app.test_client() as test_client:
-                response = test_client.get('/openapi.json')
-                self.assertEqual(200, response.status_code)
-                self.assertEqual("application/json", response.mimetype)
-                api_def = response.get_json()
-            self.assertEqual({'url': 'https://test.org/foo/bar/baz'}, api_def['servers'][0])
+        with app.test_client() as test_client:
+            response = test_client.get('/openapi.json')
+            self.assertEqual(200, response.status_code)
+            self.assertEqual("application/json", response.mimetype)
+            api_def = response.get_json()
+        self.assertEqual({'url': 'https://test.org/foo/bar/baz'}, api_def['servers'][0])
 
 
 class TestLive(unittest.TestCase):
     def setUp(self) -> None:
         app.testing = True
-        self.env = EnvironmentVarGuard()
 
     def test_standard_live(self):
         with app.test_client() as test_client:
             response = test_client.get('/live')
             self.assertEqual(200, response.status_code)
 
+    @patch('os.getenv', lambda *key: {
+        'MARKDOWN2ASSETSTORM_URL': 'https://wrong.url/not/existing'
+    }[key[0]])
     def test_converter_unreachable(self):
-        self.env.set('MARKDOWN2ASSETSTORM_URL', 'https://wrong.url/not/existing')
-        with self.env:
-            with app.test_client() as test_client:
-                response = test_client.get('/live')
-                self.assertEqual(400, response.status_code)
-                self.assertEqual({'Error': 'The url https://wrong.url/not/existing/live is unreachable.'},
-                                 response.get_json())
+        with app.test_client() as test_client:
+            response = test_client.get('/live')
+            self.assertEqual(400, response.status_code)
+            self.assertEqual({'Error': 'The url https://wrong.url/not/existing/live is unreachable.'},
+                             response.get_json())
 
 
 if __name__ == '__main__':  # pragma: no mutate
