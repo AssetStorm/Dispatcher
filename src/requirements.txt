@@ -3,4 +3,5 @@ flask
 requests
 pyaml
 pytest
+mypkg
 coverage
