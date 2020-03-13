@@ -48,12 +48,21 @@ services:
     environment:
       PYTHON_HOST: "markdown2assetstorm"
 
+  codehighlightservice:
+    image: assetstorm/codehighlightservice
+    environment:
+      PORT: 80
+    ports:
+      - "8084:80"
+
   assetstorm2template:
     image: assetstorm/assetstorm2template:latest
     depends_on:
       - assetstorm
+      - codehighlightservice
     environment:
       ASSETSTORM_URL: "assetstorm-nginx"
+      HIGHLIGHT_SERVICE_URL: "codehighlightservice"
 
   assetstorm2template-nginx:
     restart: unless-stopped
