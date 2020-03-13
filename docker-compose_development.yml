@@ -2,6 +2,7 @@ version: "3.7"
 services:
   assetstorm-postgres:
     image: postgres:alpine
+    container_name: assetstorm-postgres
     restart: unless-stopped
     environment:
       LC_ALL: "C.UTF-8"
@@ -11,6 +12,7 @@ services:
 
   assetstorm:
     image: assetstorm/assetstorm:latest
+    container_name: assetstorm
     depends_on: 
       - assetstorm-postgres
     environment:
@@ -24,6 +26,7 @@ services:
 
   assetstorm-nginx:
     restart: always
+    container_name: assetstorm-nginx
     image: assetstorm/nginx-python:latest
     ports:
       - "8081:80"
@@ -34,13 +37,16 @@ services:
 
   s3:
     image: minio/minio
+    container_name: minIO
   
   markdown2assetstorm:
     image: assetstorm/markdown2assetstorm:latest
+    container_name: markdown2assetstorm
   
   markdown2assetstorm-nginx:
     restart: unless-stopped
     image: assetstorm/nginx-python:latest
+    container_name: markdown2assetstorm-nginx
     ports: 
       - "8082:80"
     depends_on:
@@ -50,6 +56,7 @@ services:
 
   codehighlightservice:
     image: assetstorm/codehighlightservice
+    container_name: highlight.js
     environment:
       PORT: 80
     ports:
@@ -57,6 +64,7 @@ services:
 
   assetstorm2template:
     image: assetstorm/assetstorm2template:latest
+    container_name: templater
     depends_on:
       - assetstorm
       - codehighlightservice
@@ -67,6 +75,7 @@ services:
   assetstorm2template-nginx:
     restart: unless-stopped
     image: assetstorm/nginx-python:latest
+    container_name: templater-nginx
     ports:
       - "8083:80"
     depends_on:
