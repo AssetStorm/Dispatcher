@@ -18,3 +18,7 @@ class Settings:
     @property
     def templater_url(self) -> str:
         return os.getenv("ASSETSTORM2TEMPLATE_URL", "http://127.0.0.1:8083")
+
+    @property
+    def highlighter_url(self) -> str:
+        return os.getenv("CODEHIGHLIGHTSERVICE_URL", "http://127.0.0.1:8084")

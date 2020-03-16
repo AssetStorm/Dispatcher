@@ -84,13 +84,14 @@ services:
       INTERN_ASSETSTORM_URL: "http://assetstorm-nginx"
       MARKDOWN2ASSETSTORM_URL: "http://markdown2assetstorm-nginx"
       ASSETSTORM2TEMPLATE_URL: "http://assetstorm2template-nginx"
+      CODEHIGHLIGHTSERVICE_URL: "http://highlighter"
       SERVER_NAME: "dispatcher"
 
   dispatcher-nginx:
     restart: unless-stopped
     image: assetstorm/nginx-python:latest
     ports:
-      - "8084:80"
+      - "8085:80"
     depends_on:
       - dispatcher
     environment:

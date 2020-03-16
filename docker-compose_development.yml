@@ -13,7 +13,7 @@ services:
   assetstorm:
     image: assetstorm/assetstorm:latest
     container_name: assetstorm
-    depends_on: 
+    depends_on:
       - assetstorm-postgres
     environment:
       SERVER_NAME: "assetstorm"
@@ -38,16 +38,16 @@ services:
   s3:
     image: minio/minio
     container_name: minIO
-  
+
   markdown2assetstorm:
     image: assetstorm/markdown2assetstorm:latest
     container_name: markdown2assetstorm
-  
+
   markdown2assetstorm-nginx:
     restart: unless-stopped
     image: assetstorm/nginx-python:latest
     container_name: markdown2assetstorm-nginx
-    ports: 
+    ports:
       - "8082:80"
     depends_on:
       - markdown2assetstorm
@@ -57,6 +57,7 @@ services:
   codehighlightservice:
     image: assetstorm/codehighlightservice
     container_name: highlight.js
+    restart: unless-stopped
     environment:
       PORT: 80
     ports:

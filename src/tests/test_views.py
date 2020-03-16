@@ -193,6 +193,45 @@ class TestConvertMarkdown(unittest.TestCase):
             "<external href=\"https://ct.de\">https://ct.de</external></bibliography>\n" +
             "</textel>\n</document>", loaded_xml)
 
+    def two_file_conversion(self, source_path, target_example_path, source_format, target_format):
+        with open(source_path, 'rb') as source_file:
+            data = {os.path.split(source_path)[-1]: source_file}
+            with app.test_client() as test_client:
+                response = test_client.post("/convert/{}/{}".format(source_format, target_format),
+                                            data=data,
+                                            content_type="multipart/form-data")
+                self.assertEqual(200, response.status_code)
+                converted = str(response.data, encoding='utf-8')
+        print(converted)
+        with open(target_example_path, 'rb') as target_example_file:
+            self.assertEqual(converted, target_example_file.read())
+
+    def test_articles_folder(self):
+        extensions = {
+            "sy_xml": "xml",
+            "markdown": "md",
+            "assetstorm": "json"
+        }
+        base_path = os.path.dirname(os.path.realpath(__file__))
+        example_folders = os.listdir(os.path.join(base_path, "articles"))
+        for source_folder in ["markdown", "assetstorm"]:
+            if not os.path.isdir(os.path.join(base_path, "articles", source_folder)):
+                continue
+            for target_folder in example_folders:
+                if not os.path.isdir(os.path.join(base_path, "articles", target_folder)):
+                    continue
+                for source_filename in os.listdir(os.path.join(base_path, "articles", source_folder)):
+                    source_file_path = os.path.join(
+                        base_path, "articles", source_folder, source_filename)
+                    if not os.path.isfile(source_file_path):
+                        continue
+                    target_file_path = os.path.join(
+                        base_path, "articles", target_folder,
+                        source_filename.split('.')[0] + '.' +
+                        extensions[target_folder] if target_folder in extensions.keys() else 'txt')
+                    if os.path.isfile(target_file_path):
+                        self.two_file_conversion(source_file_path, target_file_path)
+
 
 class TestDeliverOpenApiDefinition(unittest.TestCase):
     def setUp(self) -> None:
