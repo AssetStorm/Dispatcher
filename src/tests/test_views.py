@@ -200,6 +200,8 @@ class TestConvertMarkdown(unittest.TestCase):
                 response = test_client.post("/convert/{}/{}".format(source_format, target_format),
                                             data=data,
                                             content_type="multipart/form-data")
+                if response.status_code != 200:
+                    print(str(response.data, encoding='utf-8'))
                 self.assertEqual(200, response.status_code)
                 converted = str(response.data, encoding='utf-8')
         print(converted)
@@ -230,7 +232,9 @@ class TestConvertMarkdown(unittest.TestCase):
                         source_filename.split('.')[0] + '.' +
                         extensions[target_folder] if target_folder in extensions.keys() else 'txt')
                     if os.path.isfile(target_file_path):
-                        self.two_file_conversion(source_file_path, target_file_path)
+                        self.two_file_conversion(source_file_path, target_file_path,
+                                                 source_format=source_folder,
+                                                 target_format=target_folder)
 
 
 class TestDeliverOpenApiDefinition(unittest.TestCase):
